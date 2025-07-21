@@ -2,17 +2,15 @@ package br.com.dio;
 
 import br.com.dio.model.Board;
 import br.com.dio.model.Space;
-
+import static br.com.dio.util.BoardTemplate.BOARD_TEMPLATE;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.Scanner;
-import java.util.stream.Stream;
-
-import static br.com.dio.util.BoardTemplate.BOARD_TEMPLATE;
 import static java.util.Objects.isNull;
 import static java.util.Objects.nonNull;
+import java.util.Scanner;
 import static java.util.stream.Collectors.toMap;
+import java.util.stream.Stream;
 
 public class Main {
 
@@ -23,6 +21,13 @@ public class Main {
     private final static int BOARD_LIMIT = 9;
 
     public static void main(String[] args) {
+        List<String> lines;
+try {
+    lines = java.nio.file.Files.readAllLines(java.nio.file.Path.of("src/br/com/dio/util/initial-board.txt"));
+} catch (Exception e) {
+    System.out.println("Erro ao ler tabuleiro: " + e.getMessage());
+    return;
+}
         final var positions = Stream.of(args)
                 .collect(toMap(
                         k -> k.split(";")[0],
@@ -66,7 +71,8 @@ public class Main {
         for (int i = 0; i < BOARD_LIMIT; i++) {
             spaces.add(new ArrayList<>());
             for (int j = 0; j < BOARD_LIMIT; j++) {
-                var positionConfig = positions.get("%s,%s".formatted(i, j));
+                var key = "%s,%s".formatted(i, j);
+var positionConfig = positions.getOrDefault(key, "0,false"); // valor default
                 var expected = Integer.parseInt(positionConfig.split(",")[0]);
                 var fixed = Boolean.parseBoolean(positionConfig.split(",")[1]);
                 var currentSpace = new Space(expected, fixed);
@@ -160,23 +166,27 @@ public class Main {
         }
     }
 
-    private static void finishGame() {
-        if (isNull(board)){
-            System.out.println("O jogo ainda não foi iniciado iniciado");
-            return;
-        }
-
-        if (board.gameIsFinished()){
-            System.out.println("Parabéns você concluiu o jogo");
-            showCurrentGame();
-            board = null;
-        } else if (board.hasErrors()) {
-            System.out.println("Seu jogo conté, erros, verifique seu board e ajuste-o");
-        } else {
-            System.out.println("Você ainda precisa preenhcer algum espaço");
-        }
+   private static void finishGame() {
+    if (isNull(board)) {
+        System.out.println("O jogo ainda não foi iniciado");
+        return;
     }
 
+    System.out.println("🔎 Verificando o tabuleiro...");
+
+    if (board.gameIsFinished() && !board.hasErrors()) {
+        System.out.println("\n🎉🎉🎉 PARABÉNS!!! 🎉🎉🎉");
+        System.out.println("🏆 Você concluiu o Sudoku com sucesso!");
+        System.out.println("🧠 Seu raciocínio lógico está afiado!");
+        System.out.println("🌟 Obrigado por jogar!");
+        showCurrentGame();
+        board = null;
+    } else if (board.hasErrors()) {
+        System.out.println("❌ Seu jogo contém erros. Verifique e tente novamente.");
+    } else {
+        System.out.println("📌 Ainda há espaços para preencher.");
+    }
+}
 
     private static int runUntilGetValidNumber(final int min, final int max){
         var current = scanner.nextInt();
